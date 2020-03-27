@@ -20,6 +20,8 @@ public:
     LoadBalancer(/* args */);
     void setCmd();
     void setFileNames();
+    void balance();
+    size_t getNofProc();
     ~LoadBalancer();
 };
 

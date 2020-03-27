@@ -1,4 +1,4 @@
-OBJECTS = main.o PipeSearch.o LoadBalancer.o Command.o Utills.o
+OBJECTS = main.o PipeSearch.o LoadBalancer.o Command.o Utills.o Worker.o
 CC = g++ -std=c++11
 
 all: main
@@ -21,6 +21,9 @@ Command.o: Command.cpp Command.h
 
 Utills.o: Utills.cpp Utills.h
 	$(CC) -c Utills.cpp
+
+Worker.o: Worker.cpp Worker.h
+	$(CC) -c Worker.cpp
 
 clean:
 	rm *.o

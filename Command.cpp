@@ -16,7 +16,7 @@ void Command::parseUserInput(){
        this->filters.push_back(std::make_pair(vec_pair[0], vec_pair[1]));
    }
 
-   this->folder_dir = "Datasets/" + this->filters[this->filters.size() - 1].second;
+   this->folder_dir = DIR_DATASET + this->filters[this->filters.size() - 1].second;
    this->filters.pop_back();
    this->number_of_2bproc = std::atoi(this->filters[this->filters.size() - 1].second.c_str());
    this->filters.pop_back();
