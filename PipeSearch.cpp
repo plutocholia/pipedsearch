@@ -11,7 +11,8 @@ void PipeSearch::runPipeSearch(){
     load_balancer->setCmd();
     load_balancer->setFileNames();
     load_balancer->balance();
-    for(int i = 0; i < load_balancer->getNofProc(); i++){ // preventing zombie stuff
+    load_balancer->createPresenter();
+    for(int i = 0; i < load_balancer->getNofProc() + 1; i++){ // preventing zombie stuff
         wait(NULL);
     }
 }

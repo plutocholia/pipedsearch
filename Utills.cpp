@@ -32,6 +32,36 @@ void Utills::printPairStringVector( const std::vector<std::pair<std::string, std
     std::cout<<"]"<<std::endl;
 }
 
+void Utills::printPairIdStringVector( const std::vector<std::pair<int, std::string> >& vec){
+    std::cout<<"["<<std::endl;
+    for(auto item : vec){
+        std::cout<<"  [" << item.first << ":" << item.second << "],\n";
+    }
+    std::cout<<"]"<<std::endl;
+}
+
+bool Utills::asortpair(const std::pair<int,std::string> &a, const std::pair<int,std::string> &b){
+    bool res;
+    try{
+        res = (std::stof(a.second) < std::stof(b.second));
+    }    
+    catch(...){
+      res = (a.second < b.second);
+    }
+    return res;
+} 
+
+bool Utills::dsortpair(const std::pair<int,std::string> &a, const std::pair<int,std::string> &b){
+    bool res;
+    try{
+        res = (std::stof(a.second) > std::stof(b.second));
+    }    
+    catch(...){
+      res = (a.second > b.second);
+    }
+    return res;
+} 
+
 void Utills::removeSpace(std::string& str){
     size_t i = 0, j;
     if(str[i] == ' '){

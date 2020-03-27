@@ -26,7 +26,7 @@ LoadBalancer::~LoadBalancer()
 
 void LoadBalancer::setCmd(){
     std::string input = "Platform = PS4 - Genre = Racing - \
-    NA_Sales = descending - UK_Sales = ascending - processes = 5 - dir = sales";
+    NA_Sales = descending - processes = 2 - dir = sales";
 
     // std::cout<<"Enter ur command :";
     // std::getline(std::cin, input);
@@ -85,12 +85,16 @@ void LoadBalancer::balance(){
             close(p[0]);
 
             // worker stuff
-            Worker* _worker = new Worker(payload);
-            _worker->parsePayload();
-            _worker->doFiltering();
+            // Worker* _worker = new Worker(payload);
+            // _worker->parsePayload();
+            // _worker->doFiltering();
+            // _worker->sendDataToPresenter();
+
+            char* _args[]={"./worker", payload, "\0"};
+            execv(_args[0], _args);
 
             // end of worker stuff
-            break;
+            // break;
         }
         else if(pid > 0){
             close(p[0]);
@@ -122,4 +126,38 @@ void LoadBalancer::balance(){
 
 size_t LoadBalancer::getNofProc(){
     return this->cmd->getNofProcesses();
+}
+
+void LoadBalancer::createPresenter(){
+    mkfifo(NAMEDPIPE_LOADBALANCER, 0666);
+    mkfifo(NAMEDPIPE_WORKER, 0666);
+
+    // creating the payload
+    std::string payload = "";
+    payload += "processes = " + std::to_string(this->cmd->getNofProcesses());
+    if(this->cmd->getSorts().size() != 0){
+        payload += " - ";
+        payload += this->cmd->getSorts()[0].first + " = " + this->cmd->getSorts()[0].second;
+    }
+
+    int pid;
+    if((pid = fork()) == 0){
+        int fd = open(NAMEDPIPE_LOADBALANCER, O_RDONLY);
+        char read_payload[LEN_MSG] = {'\0'};
+        read(fd, read_payload, LEN_MSG);
+
+        char* _args[]={"./presenter", read_payload, NULL};
+        execv(_args[0], _args);
+
+        close(fd);
+    }
+    else if(pid > 0){
+        int fd = open(NAMEDPIPE_LOADBALANCER, O_WRONLY);
+        write(fd, payload.c_str(), payload.length() +  1);
+        close(fd);
+    }
+    else{
+        perror("problem in forking at loadbalancer to presenter");
+        exit(EXIT_FAILURE);
+    }
 }

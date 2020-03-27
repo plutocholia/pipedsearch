@@ -5,8 +5,10 @@
 #define ASC "ascending"
 #define DEBUG false
 #define db if(DEBUG)
-#define LEN_MSG 2048
+#define LEN_MSG 20048
 #define DIR_DATASET "./Datasets/"
+#define NAMEDPIPE_LOADBALANCER "/tmp/namedpipe_loadbalancer"
+#define NAMEDPIPE_WORKER "/tmp/namedpipe_worker"
 
 #include <vector>
 #include <string>
@@ -24,6 +26,15 @@ public:
     );
     static void printPairStringVector(
         const std::vector<std::pair<std::string, std::string> >&
+    );
+    static void printPairIdStringVector(
+        const std::vector<std::pair<int, std::string> >&
+    );
+    static bool asortpair(
+        const std::pair<int,std::string>&, const std::pair<int,std::string>&
+    );
+    static bool dsortpair(
+        const std::pair<int,std::string>&, const std::pair<int,std::string>&
     );
 };
 

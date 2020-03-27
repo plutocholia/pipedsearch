@@ -15,6 +15,7 @@ private:
     std::vector<std::pair<std::string, std::string>> filters;
     std::vector<std::string> fnames;
     std::vector<std::string> filtered_lines;
+    std::vector<std::string> headers;
     size_t workerID;
 public:
     Worker(/* args */);
@@ -22,6 +23,7 @@ public:
     void setPayload(const std::string&);
     void parsePayload();
     void doFiltering();
+    void sendDataToPresenter();
     ~Worker();
     static size_t getWorkersCount();
 };

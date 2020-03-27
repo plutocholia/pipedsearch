@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 size_t Worker::workersCount = 0;
 
@@ -56,6 +59,7 @@ void Worker::doFiltering(){
             // header of file
             headers = Utills::splitBy(line, "-");
             for(auto& x : headers) Utills::removeSpace(x);
+            this->headers = headers;
             db std::cout<<"headers :";
             db Utills::printStringVector(headers);
             db std::cout<<std::endl;
@@ -88,4 +92,38 @@ void Worker::doFiltering(){
         db Utills::printStringVector(this->filtered_lines);
         // break;
     }
+}
+
+void Worker::sendDataToPresenter(){
+    std::string res = "";
+    for(int i = 0; i < this->headers.size(); i++){
+        res += this->headers[i];
+        if(i != this->headers.size() - 1) res += " + ";
+    }
+    if(this->filtered_lines.size() != 0) res += " ^ ";
+    int cnt = 0;
+    for(auto item : this->filtered_lines){
+        res += item;
+        if(cnt != this->filtered_lines.size() - 1) res += "^";
+        cnt += 1;
+    }
+    // res += "\n";
+    std::cout << " the worker is sending " << res.length() << " bytes of data\n";
+    int fd = open(NAMEDPIPE_WORKER, O_WRONLY);
+    write(fd, res.c_str(), res.length() + 1);
+    close(fd);
+}
+
+
+
+int main(int argc, char const *argv[])
+{
+    // std::cout<< " u are in "
+    std::string payload = argv[1];
+    Worker* _worker = new Worker(payload);
+    _worker->parsePayload();
+    _worker->doFiltering();
+    _worker->sendDataToPresenter();
+    
+    return 0;
 }

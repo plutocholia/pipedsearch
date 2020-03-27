@@ -22,6 +22,7 @@ public:
     void setFileNames();
     void balance();
     size_t getNofProc();
+    void createPresenter();
     ~LoadBalancer();
 };
 
