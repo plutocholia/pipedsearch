@@ -8,7 +8,6 @@
 
 class Worker
 {
-    static size_t workersCount;
 private:
     /* data */
     std::string payload;
@@ -17,16 +16,16 @@ private:
     std::vector<std::string> filtered_lines;
     std::vector<std::string> headers;
     size_t workerID;
-    bool if_sendme();
+    std::string result_address;
 public:
     Worker(/* args */);
-    Worker(const std::string&);
+    Worker(const std::string&, size_t);
     void setPayload(const std::string&);
     void parsePayload();
     void doFiltering();
     void sendDataToPresenter();
+    void insertResultsToFile();
     ~Worker();
-    static size_t getWorkersCount();
 };
 
 

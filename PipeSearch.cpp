@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 
 void PipeSearch::runPipeSearch(){
+    system("mkdir ./Results");
     std::cout<<"PipeSearch is running ... " << std::endl;
     while(true){
         LoadBalancer* load_balancer = new LoadBalancer();

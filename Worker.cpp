@@ -6,24 +6,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <string.h>
 
-bool Worker::if_sendme(){
-    int fd_temp = open(NAMEDPIPE_PRESENTERSTATUS, O_RDONLY);
-    std::string temp_msg;
-    char msg_temp[LEN_MSG] = {'\0'};
-    std::cout<< "[" << temp_msg << "]" << std::endl;
-    read(fd_temp, msg_temp, LEN_MSG);
-    
-    close(fd_temp);
-    temp_msg = msg_temp;
-    std::cout<< "[" << temp_msg << "]" << std::endl;
-    // sleep(1);
-    if(temp_msg == "sendme") return true;
-    return false;
-}
+#define MDB if(false)
 
-
-size_t Worker::workersCount = 0;
 
 Worker::Worker(/* args */)
 {
@@ -33,15 +19,41 @@ Worker::~Worker()
 {
 }
 
-Worker::Worker(const std::string& palyload){
+void Worker::insertResultsToFile(){
+    std::string res = "";
+    if(this->fnames.size() != 0){
+        for(int i = 0; i < this->headers.size(); i++){
+            res += this->headers[i];
+            if(i != this->headers.size() - 1) res += " - ";
+        }
+        res += "\n";
+        if(this->filtered_lines.size() == 0) res += NO_RESULT;
+        else{ 
+            int cnt = 0;
+            for(auto item : this->filtered_lines){
+                res += item;
+                if(cnt != this->filtered_lines.size() - 1) res += "\n";
+                cnt += 1;
+            }
+        }
+    }
+    else{
+        res += NULL_WORKER;
+    }
+    
+    std::ofstream ofs;
+    ofs.open(this->result_address, std::ios_base::out);
+    ofs << res;
+    ofs.close();
+}
+
+
+Worker::Worker(const std::string& palyload, size_t _id){
     this->payload = palyload;
-    Worker::workersCount++;
-    this->workerID = getWorkersCount();
-    // while(this->if_sendme() == false){
-    //     // sleep(1);
-    // }
-    // this->if_sendme();
-    std::cout << "WROKER SEES SENDME" << std::endl;
+    this->workerID = _id;
+    // sleep(1*_id);
+    this->result_address = DIR_RESULTS;
+    this->result_address += "worker" + std::to_string(this->workerID);
 }
 
 void Worker::setPayload(const std::string& payload){
@@ -56,12 +68,9 @@ void Worker::parsePayload(){
         if(temp[0] == "fname") this->fnames.push_back(temp[1]);
         else this->filters.push_back(std::make_pair(temp[0], temp[1]));
     }
-    if(this->fnames.size() == 0) std::cout<<"WORKER : I HAVE NO JOBS TO DOOO\n";
+    if(this->fnames.size() == 0) MDB std::cout<<"WORKER "<< this->workerID <<" : I HAVE NO JOBS TO DOOO\n";
 }
 
-size_t Worker::getWorkersCount(){
-    return Worker::workersCount;
-}
 
 void Worker::doFiltering(){
     for(auto file : this->fnames){
@@ -106,58 +115,27 @@ void Worker::doFiltering(){
                 this->filtered_lines.push_back(line);
         }
         fs.close();
-        // break;
     }
 }
 
 void Worker::sendDataToPresenter(){
-    std::string res = "";
-    for(int i = 0; i < this->headers.size(); i++){
-        res += this->headers[i];
-        if(i != this->headers.size() - 1) res += " + ";
-    }
-    if(this->fnames.size() != 0){
-        if(this->filtered_lines.size() == 0) res += "^NO_RESULT";
-        else{ 
-            res += " ^ ";
-            int cnt = 0;
-            for(auto item : this->filtered_lines){
-                res += item;
-                if(cnt != this->filtered_lines.size() - 1) res += "^";
-                cnt += 1;
-            }
-        }
-    }
-    else{
-        res += "NULL_WORKER";
-    }
-    res += "\n";
     
-    
-    // while(this->if_sendme() == false){
+    std::string res = this->result_address + "\n";
+    std::cout << "WORKER " << this->workerID << " : sending " << res.length() << " bytes of data\n";
+    int fd = open(NAMEDPIPE_WORKER, O_WRONLY);
+    write(fd, res.c_str(), res.length());
+    close(fd);
 
-    // }
-
-    // int fd = open(NAMEDPIPE_WORKER, O_WRONLY | O_APPEND);
-    // write(fd, res.c_str(), res.length());
-    // close(fd);
-    std::cout << "WORKER : the worker is sending " << res.length() << " bytes of data\n";
-    std::ofstream outfile;
-    outfile.open(NAMEDPIPE_WORKER, std::ios_base::out);
-    outfile << res;
-    outfile.close();
-}
-
-
+}   
 
 int main(int argc, char const *argv[])
 {
-    // std::cout<< " u are in "
     std::string payload = argv[1];
-    Worker* _worker = new Worker(payload);
+    Worker* _worker = new Worker(payload, std::stoi(argv[2]));
     _worker->parsePayload();
     _worker->doFiltering();
+    _worker->insertResultsToFile();
     _worker->sendDataToPresenter();
-    std::cout << "Worker is Gone\n";
+    MDB std::cout << "Worker Number " << argv[2] << " is gone" << std::endl;
     return 0;
 }

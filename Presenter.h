@@ -20,6 +20,7 @@ private:
         const std::vector<std::pair<int, std::string>>&
     );
     void sendSendMe();
+    std::vector<std::string> makeVecWorker(const std::string&);
 public:
     Presenter(std::string);
     void readWorkersData();

@@ -35,10 +35,16 @@ void LoadBalancer::setCmd(){
 }
 
 void LoadBalancer::createFifo(){
+
+    remove(NAMEDPIPE_LOADBALANCER);
+    remove(NAMEDPIPE_WORKER);
+
     mkfifo(NAMEDPIPE_LOADBALANCER, 0666);
     mkfifo(NAMEDPIPE_WORKER, 0666);
-    mkfifo(NAMEDPIPE_PRESENTERSTATUS, 0666);
-    // here is file exchange
+    std::cout<< "FIFOS are Created!" << std::endl;
+    // if( < 0) perror("unable to create named pipe");
+    // if( < 0)  perror("unable to create named pipe");
+    // mkfifo(NAMEDPIPE_PRESENTERSTATUS, 0666);
 }
 
 void LoadBalancer::setFileNames(){
@@ -65,6 +71,7 @@ void LoadBalancer::balance(){
     std::vector<std::vector<std::string> > workers_load;
     std::vector<int> distr_files(5);
 
+    // balance files to fileter
     for(int i = 0; i < this->cmd->getNofProcesses(); i++){
         std::vector<std::string> fnames;
         for(int j = 0; j < this->file_names.size(); j++){
@@ -73,8 +80,8 @@ void LoadBalancer::balance(){
         workers_load.push_back(fnames);
     }
 
+    // creating worker processes
     for(int i = 0; i < this->cmd->getNofProcesses(); i++){
-        std::cout<< "worker num " << i +  1 << " is created.\n";
         std::vector<std::string> fnames = workers_load[i];
         // int* p = workers_load[i].second;
         int p[2];
@@ -83,6 +90,7 @@ void LoadBalancer::balance(){
             exit(EXIT_FAILURE);
         }
         int pid = fork();
+        
         if(pid == 0){
             close(p[1]);
             char payload[LEN_MSG] = {'\0'};
@@ -95,13 +103,16 @@ void LoadBalancer::balance(){
             // _worker->doFiltering();
             // _worker->sendDataToPresenter();
 
-            char* _args[]={"./worker", payload, "\0"};
+            char _wid[10] = {'\0'};
+            strcpy(_wid, std::to_string(i).c_str());
+            char* _args[] = {"./worker", payload, _wid, NULL};
             execv(_args[0], _args);
 
             // end of worker stuff
             break;
         }
         else if(pid > 0){
+            std::cout<< "worker " << i << " is created with pid of "<< pid << std::endl;
             close(p[0]);
             // creating payload with format of
             std::string payload = "";
@@ -141,7 +152,6 @@ void LoadBalancer::run(){
         payload += " - ";
         payload += this->cmd->getSorts()[0].first + " = " + this->cmd->getSorts()[0].second;
     }
-
     int pid;
     if((pid = fork()) == 0){
         int fd = open(NAMEDPIPE_LOADBALANCER, O_RDONLY);
@@ -166,4 +176,5 @@ void LoadBalancer::run(){
         perror("problem in forking at loadbalancer to presenter");
         exit(EXIT_FAILURE);
     }
+    // this->balance();
 }
