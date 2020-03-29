@@ -17,6 +17,7 @@ private:
     std::vector<std::string> filtered_lines;
     std::vector<std::string> headers;
     size_t workerID;
+    bool if_sendme();
 public:
     Worker(/* args */);
     Worker(const std::string&);

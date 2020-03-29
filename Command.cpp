@@ -30,6 +30,7 @@ void Command::parseUserInput(){
        }
        i += 1;
    }
+   if(start_sort_index != -1)
    this->filters.erase(this->filters.begin() + start_sort_index, this->filters.end());
 
     db Utills::printPairStringVector(this->filters);

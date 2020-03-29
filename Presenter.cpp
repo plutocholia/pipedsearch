@@ -9,23 +9,6 @@
 #include <functional>
 
 Presenter::Presenter(std::string payload){
-    // this->col2_sorted_data.push_back(
-    //     std::make_pair(15, "13")
-    // );
-
-    // this->col2_sorted_data.push_back(
-    //     std::make_pair(15, "12")
-    // );
-
-    // this->col2_sorted_data.push_back(
-    //     std::make_pair(15, "-0.14")
-    // );
-
-
-    // this->col2_sorted_data.push_back(
-    //     std::make_pair(15, "0.25")
-    // );
-
     this->last_id = 0;
     this->sortLocation = -1;
     std::vector<std::string> tokens = Utills::splitBy(payload, "-");
@@ -35,81 +18,67 @@ Presenter::Presenter(std::string payload){
         if(temp[0] == "processes") this->nofProcesses = atoi(temp[1].c_str());
         else this->sorts.push_back(std::make_pair(temp[0], temp[1]));
     }
+    // this->sendSendMe();
 }
 
 Presenter::~Presenter(){
 }
 
+void Presenter::sendSendMe(){
+    // int fd_temp = open(NAMEDPIPE_PRESENTERSTATUS, O_WRONLY);
+    // std::string temp_msg = "sendme";
+    // write(fd_temp, temp_msg.c_str(), temp_msg.length() + 1);
+    // close(fd_temp);
+    std::ofstream outfile;
+    outfile.open(NAMEDPIPE_PRESENTERSTATUS, std::ios_base::out);
+    outfile << "sendme";
+    outfile.close();
+}
+
 void Presenter::readWorkersData(){
-        
+    // std::ifstream fd;
+    // fd.open(NAMEDPIPE_WORKER, std::fstream::in);
     for(int i = 0; i < this->nofProcesses; i++){
+        std::cout<< "PRESENTER : Reading the " << i << " workers data" << std::endl;
         std::string worker_stuff;
 
-        int fd = open(NAMEDPIPE_WORKER, O_RDONLY);
-        char temp[LEN_MSG] = {'\0'};
-        read(fd, temp, sizeof(temp));
-        close(fd);
-        worker_stuff = temp;
+        size_t read_len = 0;
+        while(read_len == 0){
+            // getline(fd, worker_stuff);
+            int fd = open(NAMEDPIPE_WORKER, O_RDONLY);
+            char temp[LEN_MSG] = {'\0'};
+            read(fd, temp, sizeof(temp));
+            close(fd);
+            worker_stuff = temp;
 
-        // std::ifstream fd;
-        // fd.open(NAMEDPIPE_WORKER, std::fstream::in);
-        // getline(fd, worker_stuff);
-        // fd.close();
-        
-
-        std::vector<std::string> vec_worker = Utills::splitBy(worker_stuff, "^");
-        std::vector<std::pair<int, std::string>> nice_vec = this->addAndPrepair(vec_worker);
-        if(this->sorts.size() != 0){
-            if(this->sorts[0].second == ASC)
-                std::sort(nice_vec.begin(), nice_vec.end(), Utills::asortpair);
-            else std::sort(nice_vec.begin(), nice_vec.end(), Utills::dsortpair);
-            this->mergeSortedData(nice_vec);
-            // break;
+            // std::ifstream fd;
+            // fd.open(NAMEDPIPE_WORKER, std::fstream::in);
+            // getline(fd, worker_stuff);
+            // fd.close();
+            read_len = worker_stuff.size();
         }
-    }
-    Utills::printPairIdStringVector(this->col2_sorted_data);
 
+        std::cout<< "PRESENTER : got " << i << " workers data with length of " << worker_stuff.size() << std::endl;
+        if(worker_stuff != "NO_RESULT\n"){
+            std::vector<std::string> vec_worker = Utills::splitBy(worker_stuff, "^");
+            std::vector<std::pair<int, std::string>> nice_vec = this->addAndPrepair(vec_worker);
+            if(this->sorts.size() != 0){
+                if(this->sorts[0].second == ASC)
+                    std::sort(nice_vec.begin(), nice_vec.end(), Utills::asortpair);
+                else std::sort(nice_vec.begin(), nice_vec.end(), Utills::dsortpair);
+                this->mergeSortedData(nice_vec);
+            }
+        }else{std::cout << "PRESENTER : was an empty message\n";}
+        // this->sendSendMe();
+    }
+    // fd.close();
 }
+
+
 
 void Presenter::mergeSortedData(const std::vector<std::pair<int, std::string>>& data){
     std::vector<std::pair<int, std::string>> res(data.size() + this->col2_sorted_data.size());
-    // int i = 0, j = 0, state = 2;
-    // std::cout<< "first sorted data : " << std::endl;
-    // Utills::printPairIdStringVector(this->col2_sorted_data);
-    // if(this->col2_sorted_data.size() != 0){
-    //     while(true){
-    //         if((this->sorts[0].second == ASC) && Utills::asortpair(this->col2_sorted_data[i], data[j]))
-    //             res.push_back(this->col2_sorted_data[i++]);
-    //         else res.push_back(data[j++]);
-    //         if((i == this->col2_sorted_data.size()) && (j != data.size())){
-    //             state = 2;
-    //             break;
-    //         }
-    //         if((j == data.size()) && (i != this->col2_sorted_data.size())){
-    //             state = 1;
-    //             break;
-    //         }
-    //         if((j == data.size()) && (i == this->col2_sorted_data.size())){
-    //             state = 0;
-    //             break;
-    //         }
-    //     }
-    // }
-    // if(state == 0){}
-    // else if(state == 1){
-    //     for(; i < this->col2_sorted_data.size(); i++)
-    //         res.push_back(this->col2_sorted_data[i]);
-    // }
-    // else{
-    //     for(; j < data.size(); j++)
-    //         res.push_back(data[j]);
-    // }
-    // this->col2_sorted_data = res;
-    // std::cout<<"at the end : " << std::endl;
-    // Utills::printPairIdStringVector(this->col2_sorted_data);
 
-    // std::cout<< "first sorted data : " << std::endl;
-    // Utills::printPairIdStringVector(this->col2_sorted_data);
     if(this->sorts[0].second == ASC)
     std::merge(
         this->col2_sorted_data.begin(),
@@ -129,8 +98,6 @@ void Presenter::mergeSortedData(const std::vector<std::pair<int, std::string>>& 
         Utills::dsortpair
     );
     this->col2_sorted_data = res;
-    // std::cout<<"at the end : " << std::endl;
-    // Utills::printPairIdStringVector(this->col2_sorted_data);
 }
 
 
@@ -146,7 +113,6 @@ std::vector<std::pair<int, std::string>> Presenter::addAndPrepair(const std::vec
                 Utills::removeSpace(item2);
                 if(item2 == this->sorts[0].first){
                     this->sortLocation = tracker;
-                    std::cout<< "the sort location is : " << this->sortLocation << std::endl;
                     break;
                 }
                 tracker += 1;
@@ -173,18 +139,43 @@ std::vector<std::pair<int, std::string>> Presenter::addAndPrepair(const std::vec
 
 
 void Presenter::printResult(){
-    std::cout<< " done " << std::endl;
-    for(auto& item : this->col2_sorted_data){
-        Utills::removeSpace(this->raw_date[item.first].second);
-        std::cout << this->raw_date[item.first].second << std::endl;
+    std::cout<< "~~ done ~~" << std::endl;
+    if(this->sorts.size() != 0){
+        std::cout << "final results(with sort): " << std::endl;
+        for(auto& item : this->col2_sorted_data){
+            Utills::removeSpace(this->raw_date[item.first].second);
+            std::cout << this->raw_date[item.first].second << std::endl;
+        }
+    }
+    else{
+        std::cout << "final results(without sort): " << std::endl;
+        for(auto& item : this->raw_date){
+            Utills::removeSpace(item.second);
+            std::cout<< item.second << std::endl;
+        }
     }
 }
 
 
 int main(int argc, char const *argv[])
 {
+    
     Presenter* presenter = new Presenter(argv[1]);
+
+    std::string payload = "done";
+    int fd = open(NAMEDPIPE_LOADBALANCER, O_WRONLY);
+    write(fd, payload.c_str(), payload.length() +  1);
+    close(fd);
+    
+    // int fd_temp = open(NAMEDPIPE_WORKER, O_WRONLY);
+    // std::string temp_msg = "sendme";
+    // write(fd_temp, temp_msg.c_str(), temp_msg.length());
+    // close(fd_temp);
+
     presenter->readWorkersData();
     presenter->printResult();
+    delete presenter;
+
+    std::cout << "Presenter Gone\n";
     return 0;
 }

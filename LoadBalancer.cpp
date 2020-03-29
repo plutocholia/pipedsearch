@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
-
+#include <fstream>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -25,14 +25,20 @@ LoadBalancer::~LoadBalancer()
 
 
 void LoadBalancer::setCmd(){
-    std::string input = "Platform = PS4 - Genre = Racing - \
-    NA_Sales = descending - processes = 2 - dir = sales";
-
-    // std::cout<<"Enter ur command :";
-    // std::getline(std::cin, input);
-
+    // std::string input = "Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 2 - dir = sales";
+    std::string input;
+    std::cout<<"Enter ur command :";
+    std::getline(std::cin, input);
+    if(input == "quit") exit(EXIT_SUCCESS);
     this->cmd = new Command(input);
     this->cmd->parseUserInput();
+}
+
+void LoadBalancer::createFifo(){
+    mkfifo(NAMEDPIPE_LOADBALANCER, 0666);
+    mkfifo(NAMEDPIPE_WORKER, 0666);
+    mkfifo(NAMEDPIPE_PRESENTERSTATUS, 0666);
+    // here is file exchange
 }
 
 void LoadBalancer::setFileNames(){
@@ -52,7 +58,6 @@ void LoadBalancer::setFileNames(){
         perror("Unable to list files in Dataset\n");
         exit(EXIT_FAILURE);
     }
-    db std::cout<< "files are extracted" << std::endl;
 }
 
 
@@ -94,7 +99,7 @@ void LoadBalancer::balance(){
             execv(_args[0], _args);
 
             // end of worker stuff
-            // break;
+            break;
         }
         else if(pid > 0){
             close(p[0]);
@@ -128,10 +133,7 @@ size_t LoadBalancer::getNofProc(){
     return this->cmd->getNofProcesses();
 }
 
-void LoadBalancer::createPresenter(){
-    mkfifo(NAMEDPIPE_LOADBALANCER, 0666);
-    mkfifo(NAMEDPIPE_WORKER, 0666);
-
+void LoadBalancer::run(){
     // creating the payload
     std::string payload = "";
     payload += "processes = " + std::to_string(this->cmd->getNofProcesses());
@@ -145,16 +147,20 @@ void LoadBalancer::createPresenter(){
         int fd = open(NAMEDPIPE_LOADBALANCER, O_RDONLY);
         char read_payload[LEN_MSG] = {'\0'};
         read(fd, read_payload, LEN_MSG);
-
+        close(fd);
         char* _args[]={"./presenter", read_payload, NULL};
         execv(_args[0], _args);
-
-        close(fd);
     }
     else if(pid > 0){
         int fd = open(NAMEDPIPE_LOADBALANCER, O_WRONLY);
         write(fd, payload.c_str(), payload.length() +  1);
         close(fd);
+        fd = open(NAMEDPIPE_LOADBALANCER, O_RDONLY);
+        char read_payload[LEN_MSG] = {'\0'};
+        read(fd, read_payload, LEN_MSG);
+        std::string temp = read_payload;
+        std::cout<<"ACK :[" << temp << "] : Presenter is running..." << std::endl;
+        this->balance();
     }
     else{
         perror("problem in forking at loadbalancer to presenter");

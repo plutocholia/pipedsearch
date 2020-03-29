@@ -63,6 +63,8 @@ bool Utills::dsortpair(const std::pair<int,std::string> &a, const std::pair<int,
 } 
 
 void Utills::removeSpace(std::string& str){
+    if(str[str.length() - 1] == '\n')
+    str.erase(str.length() - 1, str.length());
     size_t i = 0, j;
     if(str[i] == ' '){
         while(str[i] == ' ') i++;

@@ -19,6 +19,7 @@ private:
     void mergeSortedData(
         const std::vector<std::pair<int, std::string>>&
     );
+    void sendSendMe();
 public:
     Presenter(std::string);
     void readWorkersData();

@@ -1,0 +1,21 @@
+Name - Platform - Year - Genre - Publisher - NA_Sales - EU_Sales - JP_Sales - Other_Sales - Global_Sales
+
+Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 5 - dir = sales
+Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 3 - dir = sales
+Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 2 - dir = sales
+Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 1 - dir = sales
+Platform = PS4 - Genre = Racing - NA_Sales = descending - processes = 20 - dir = sales
+
+
+Platform = X360 - processes = 5 - dir = sales
+Platform = X360 - processes = 10 - dir = sales
+Platform = X360 - processes = 2 - dir = sales
+Platform = X360 - processes = 1 - dir = sales
+
+Platform = X360 - JP_Sales = descending - processes = 5 - dir = sales
+Platform = X360 - JP_Sales = descending - processes = 3 - dir = sales
+Platform = X360 - JP_Sales = descending - processes = 10 - dir = sales
+Platform = X360 - JP_Sales = descending - processes = 1 - dir = sales
+Platform = X360 - JP_Sales = descending - processes = 2 - dir = sales
+
+Platform = X360 - Genre = ascending - processes = 1 - dir = sales

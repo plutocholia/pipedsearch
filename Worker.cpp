@@ -7,6 +7,22 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+bool Worker::if_sendme(){
+    int fd_temp = open(NAMEDPIPE_PRESENTERSTATUS, O_RDONLY);
+    std::string temp_msg;
+    char msg_temp[LEN_MSG] = {'\0'};
+    std::cout<< "[" << temp_msg << "]" << std::endl;
+    read(fd_temp, msg_temp, LEN_MSG);
+    
+    close(fd_temp);
+    temp_msg = msg_temp;
+    std::cout<< "[" << temp_msg << "]" << std::endl;
+    // sleep(1);
+    if(temp_msg == "sendme") return true;
+    return false;
+}
+
+
 size_t Worker::workersCount = 0;
 
 Worker::Worker(/* args */)
@@ -21,7 +37,11 @@ Worker::Worker(const std::string& palyload){
     this->payload = palyload;
     Worker::workersCount++;
     this->workerID = getWorkersCount();
-    db std::cout << "worker in this process " << this->workerID << " : [" << payload << "]" << std::endl;
+    // while(this->if_sendme() == false){
+    //     // sleep(1);
+    // }
+    // this->if_sendme();
+    std::cout << "WROKER SEES SENDME" << std::endl;
 }
 
 void Worker::setPayload(const std::string& payload){
@@ -36,6 +56,7 @@ void Worker::parsePayload(){
         if(temp[0] == "fname") this->fnames.push_back(temp[1]);
         else this->filters.push_back(std::make_pair(temp[0], temp[1]));
     }
+    if(this->fnames.size() == 0) std::cout<<"WORKER : I HAVE NO JOBS TO DOOO\n";
 }
 
 size_t Worker::getWorkersCount(){
@@ -60,9 +81,6 @@ void Worker::doFiltering(){
             headers = Utills::splitBy(line, "-");
             for(auto& x : headers) Utills::removeSpace(x);
             this->headers = headers;
-            db std::cout<<"headers :";
-            db Utills::printStringVector(headers);
-            db std::cout<<std::endl;
             nof_line += 1;
         }
         // finding filters index
@@ -88,8 +106,6 @@ void Worker::doFiltering(){
                 this->filtered_lines.push_back(line);
         }
         fs.close();
-        db std::cout << "File " << file << " is done like : \n";
-        db Utills::printStringVector(this->filtered_lines);
         // break;
     }
 }
@@ -100,18 +116,36 @@ void Worker::sendDataToPresenter(){
         res += this->headers[i];
         if(i != this->headers.size() - 1) res += " + ";
     }
-    if(this->filtered_lines.size() != 0) res += " ^ ";
-    int cnt = 0;
-    for(auto item : this->filtered_lines){
-        res += item;
-        if(cnt != this->filtered_lines.size() - 1) res += "^";
-        cnt += 1;
+    if(this->fnames.size() != 0){
+        if(this->filtered_lines.size() == 0) res += "^NO_RESULT";
+        else{ 
+            res += " ^ ";
+            int cnt = 0;
+            for(auto item : this->filtered_lines){
+                res += item;
+                if(cnt != this->filtered_lines.size() - 1) res += "^";
+                cnt += 1;
+            }
+        }
     }
-    // res += "\n";
-    std::cout << " the worker is sending " << res.length() << " bytes of data\n";
-    int fd = open(NAMEDPIPE_WORKER, O_WRONLY);
-    write(fd, res.c_str(), res.length() + 1);
-    close(fd);
+    else{
+        res += "NULL_WORKER";
+    }
+    res += "\n";
+    
+    
+    // while(this->if_sendme() == false){
+
+    // }
+
+    // int fd = open(NAMEDPIPE_WORKER, O_WRONLY | O_APPEND);
+    // write(fd, res.c_str(), res.length());
+    // close(fd);
+    std::cout << "WORKER : the worker is sending " << res.length() << " bytes of data\n";
+    std::ofstream outfile;
+    outfile.open(NAMEDPIPE_WORKER, std::ios_base::out);
+    outfile << res;
+    outfile.close();
 }
 
 
@@ -124,6 +158,6 @@ int main(int argc, char const *argv[])
     _worker->parsePayload();
     _worker->doFiltering();
     _worker->sendDataToPresenter();
-    
+    std::cout << "Worker is Gone\n";
     return 0;
 }

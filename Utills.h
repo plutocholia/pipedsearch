@@ -5,10 +5,11 @@
 #define ASC "ascending"
 #define DEBUG false
 #define db if(DEBUG)
-#define LEN_MSG 20048
+#define LEN_MSG 200000
 #define DIR_DATASET "./Datasets/"
 #define NAMEDPIPE_LOADBALANCER "/tmp/namedpipe_loadbalancer"
 #define NAMEDPIPE_WORKER "/tmp/namedpipe_worker"
+#define NAMEDPIPE_PRESENTERSTATUS "/tmp/namedpipe_presenter_status"
 
 #include <vector>
 #include <string>

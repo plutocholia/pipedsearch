@@ -22,12 +22,10 @@ public:
     void setFileNames();
     void balance();
     size_t getNofProc();
-    void createPresenter();
+    void run();
+    void createFifo();
     ~LoadBalancer();
 };
-
-
-
 
 
 #endif // LOADBALANCER_H
